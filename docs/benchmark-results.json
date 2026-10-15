@@ -1,0 +1,50 @@
+{
+  "benchmark": "synthetic isolated injection controls, not real-world sensitivity/specificity",
+  "seed": 42,
+  "train_rows_per_case": 200,
+  "test_rows_per_case": 200,
+  "cases": {
+    "clean": {
+      "expected_signal": null,
+      "detected_signals": [],
+      "passed": true
+    },
+    "duplicates": {
+      "expected_signal": "cross_split_duplicates",
+      "detected_signals": [
+        "cross_split_duplicates"
+      ],
+      "passed": true
+    },
+    "entities": {
+      "expected_signal": "entity_overlap",
+      "detected_signals": [
+        "entity_overlap"
+      ],
+      "passed": true
+    },
+    "time": {
+      "expected_signal": "temporal_overlap",
+      "detected_signals": [
+        "temporal_overlap"
+      ],
+      "passed": true
+    },
+    "proxy": {
+      "expected_signal": "target_proxy",
+      "detected_signals": [
+        "target_proxy"
+      ],
+      "passed": true
+    },
+    "shift": {
+      "expected_signal": "distribution_shift",
+      "detected_signals": [
+        "distribution_shift"
+      ],
+      "passed": true
+    }
+  },
+  "passed": 6,
+  "total": 6
+}
