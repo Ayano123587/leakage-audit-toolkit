@@ -1,0 +1,86 @@
+{
+  "provenance": {
+    "source": "https://archive.ics.uci.edu/static/public/2/adult.zip",
+    "source_page": "https://archive.ics.uci.edu/dataset/2/adult",
+    "attribution": "Becker, B. & Kohavi, R. (1996). Adult. UCI Machine Learning Repository.",
+    "doi": "https://doi.org/10.24432/C5XW20",
+    "license": "CC BY 4.0",
+    "archive_sha256": "7537312dd56c2b98035880805ce99e68183a30ee468aa5329d6df0fbb3cc21bb",
+    "source_sha256": {
+      "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+      "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+    }
+  },
+  "preprocessing": "Strip field whitespace, remove documented test-label terminal period, map ? to None; no row removal or resplitting.",
+  "audit": {
+    "schema_version": 1,
+    "rows": {
+      "train": 32561,
+      "test": 16281
+    },
+    "findings": [
+      {
+        "kind": "cross_split_duplicates",
+        "severity": "high",
+        "evidence": {
+          "test_rows": 26,
+          "test_fraction": 0.0015969535040845158,
+          "columns": [
+            "age",
+            "capital_gain",
+            "capital_loss",
+            "education",
+            "education_num",
+            "fnlwgt",
+            "hours_per_week",
+            "marital_status",
+            "native_country",
+            "occupation",
+            "race",
+            "relationship",
+            "sex",
+            "workclass"
+          ],
+          "numeric_normalization_columns": []
+        }
+      },
+      {
+        "kind": "within_train_label_conflicts",
+        "severity": "review",
+        "evidence": {
+          "feature_groups": 1
+        }
+      },
+      {
+        "kind": "cross_split_label_conflicts",
+        "severity": "review",
+        "evidence": {
+          "test_rows": 3,
+          "interpretation": "Matching feature vectors have contradictory labels; legitimate stochastic outcomes are possible."
+        }
+      }
+    ],
+    "configuration": {
+      "numeric_duplicate_columns": [],
+      "check_target_quality": true
+    },
+    "limitations": [
+      "Signals require domain review; distribution shift is not proof of leakage.",
+      "Cannot detect preprocessing fit on test data, label availability or semantic duplicates.",
+      "Exact feature-row comparisons exclude configured target/entity/time; missing tokens are documented.",
+      "Numeric proxy detection uses train-only linear association; nonlinear proxies may be missed."
+    ]
+  },
+  "independent_reference": {
+    "cross_split_matching_test_rows": 26,
+    "cross_split_matching_feature_groups": 26,
+    "repeated_training_feature_groups": 24,
+    "extra_training_copies": 25
+  },
+  "interpretation": "Unmodified official records contain repeated feature vectors. This is an observed integrity signal, not proof the same individual crossed splits; no person IDs are available.",
+  "limitations": [
+    "No expert natural-leakage labels, so sensitivity/false-positive rate cannot be estimated.",
+    "Demographic features are used only for split diagnostics; no income model or fairness claim is made.",
+    "Target-quality option consults heldout labels for diagnostics, never for model fitting."
+  ]
+}

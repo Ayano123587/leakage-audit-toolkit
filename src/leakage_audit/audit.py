@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 import csv
 import math
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 MISSING = {"", "na", "nan", "null", "none"}
@@ -17,6 +18,8 @@ class AuditConfig:
     embargo_seconds: float = 0
     proxy_threshold: float = .98
     shift_threshold: float = .3
+    numeric_duplicate_columns: tuple[str, ...] = ()
+    check_target_quality: bool = False
 
     def __post_init__(self):
         names=[name for name in (self.target,self.entity,self.time) if name is not None]
@@ -24,6 +27,10 @@ class AuditConfig:
             raise ValueError("Configured column names must be nonempty strings")
         if len(names)!=len(set(names)):
             raise ValueError("Target, entity and time columns must be distinct")
+        if not isinstance(self.numeric_duplicate_columns, tuple) or any(not isinstance(c, str) or not c.strip() for c in self.numeric_duplicate_columns) or len(set(self.numeric_duplicate_columns)) != len(self.numeric_duplicate_columns):
+            raise ValueError("Numeric duplicate columns must be a tuple of distinct nonempty names")
+        if not isinstance(self.check_target_quality, bool):
+            raise ValueError("check_target_quality must be boolean")
         values=(self.embargo_seconds,self.proxy_threshold,self.shift_threshold)
         if any(not isinstance(v,(int,float)) for v in values):
             raise ValueError("Embargo and thresholds must be numeric")
@@ -130,11 +137,57 @@ def audit(train, test, config):
     features = sorted(columns - required)
     if not features:
         raise ValueError("At least one non-metadata feature is required")
-    signature = lambda row: tuple(row[c] for c in features)
+    if not set(config.numeric_duplicate_columns) <= set(features):
+        raise ValueError("Numeric duplicate columns must be non-metadata feature columns")
+    def signature(row):
+        values = []
+        for col in features:
+            value = row[col]
+            if col in config.numeric_duplicate_columns:
+                if missing(value):
+                    value = ('missing',)
+                else:
+                    try:
+                        normalized = Decimal(str(value).strip())
+                    except InvalidOperation as error:
+                        raise ValueError(f"Configured numeric duplicate column contains nonnumeric data: {col}") from error
+                    if not normalized.is_finite():
+                        raise ValueError(f"Configured numeric duplicate column contains nonfinite data: {col}")
+                    value = ('numeric', normalized)
+            values.append(value)
+        return tuple(values)
+    # Validate explicitly numeric columns even on otherwise unusable rows.
+    if config.numeric_duplicate_columns:
+        for row in train + test:
+            signature(row)
     signatures = {signature(r) for r in train if any(usable(r[c]) for c in features)}
     duplicates = sum(any(usable(r[c]) for c in features) and signature(r) in signatures for r in test)
     if duplicates:
-        add("cross_split_duplicates", "high", test_rows=duplicates, test_fraction=duplicates/len(test), columns=features)
+        add("cross_split_duplicates", "high", test_rows=duplicates, test_fraction=duplicates/len(test), columns=features,
+            numeric_normalization_columns=list(config.numeric_duplicate_columns))
+    if config.check_target_quality:
+        target_quality = {}
+        for name, rows in [('train', train), ('test', test)]:
+            absent = sum(missing(r[config.target]) for r in rows)
+            invalid = sum(nonfinite(r[config.target]) for r in rows)
+            if absent or invalid:
+                target_quality[name] = {'missing': absent, 'nonfinite': invalid, 'rows': len(rows)}
+        if target_quality:
+            add('target_quality', 'review', splits=target_quality)
+        # Explicit opt-in: consults heldout labels for quality, never fits proxy scores.
+        labels_by_signature = {}
+        for row in train:
+            if usable(row[config.target]) and any(usable(row[c]) for c in features):
+                labels_by_signature.setdefault(signature(row), set()).add(row[config.target])
+        conflicts = sum(len(labels) > 1 for labels in labels_by_signature.values())
+        if conflicts:
+            add('within_train_label_conflicts', 'review', feature_groups=conflicts)
+        cross_conflicts = sum(usable(r[config.target]) and any(usable(r[c]) for c in features)
+                              and signature(r) in labels_by_signature
+                              and any(label != r[config.target] for label in labels_by_signature[signature(r)]) for r in test)
+        if cross_conflicts:
+            add('cross_split_label_conflicts', 'review', test_rows=cross_conflicts,
+                interpretation='Matching feature vectors have contradictory labels; legitimate stochastic outcomes are possible.')
     if config.entity:
         entities = {r[config.entity] for r in train if not missing(r[config.entity])}
         overlap = sum(not missing(r[config.entity]) and r[config.entity] in entities for r in test)
@@ -193,4 +246,6 @@ def audit(train, test, config):
         if at_least(distance,config.shift_threshold):
             add("distribution_shift", "review", column=col, method=method, score=distance, train_nonmissing=len(a), test_nonmissing=len(b))
     return {"schema_version": 1, "rows": {"train": len(train), "test": len(test)}, "findings": findings,
+            "configuration": {'numeric_duplicate_columns': list(config.numeric_duplicate_columns),
+                              'check_target_quality': config.check_target_quality},
             "limitations": ["Signals require domain review; distribution shift is not proof of leakage.", "Cannot detect preprocessing fit on test data, label availability or semantic duplicates.", "Exact feature-row comparisons exclude configured target/entity/time; missing tokens are documented.", "Numeric proxy detection uses train-only linear association; nonlinear proxies may be missed."]}

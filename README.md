@@ -2,16 +2,27 @@
 
 An installable, dependency-free Python toolkit for reviewing train/test CSV integrity. It produces explainable JSON findings and supports a failing CI gate for high-severity split violations. Distribution shift and target association are review signals, not leakage verdicts.
 
+New opt-in checks detect numeric duplicates hidden by serialization formatting and
+missing/conflicting target labels. Exact decimal comparisons preserve large integers;
+default auditing still ignores heldout labels. [Measured controls and usage](docs/quality-improvements.md)
+document five formatting-disguised copies detected, 20 unmodified real-data controls,
+73 passing tests, and the limits of these quality signals. A further unmodified
+48,842-row UCI Adult audit finds 26 cross-split matching feature vectors, independently
+verified; this is a review signal rather than proof of shared people or harmful leakage.
+
 ## Quick start
 
 ```bash
 python -m pip install -e ".[dev]"
-python -m leakage_audit.benchmark --output data/processed --report docs/benchmark-results.json
-leakage-audit data/processed/duplicates_train.csv data/processed/duplicates_test.csv --target target --entity entity --time timestamp --output docs/example-report.json --fail-on-high
+python -m leakage_audit.adult_validation
+leakage-audit data/processed/adult/train.csv data/processed/adult/test.csv --target target --check-target-quality --output data/processed/adult/audit.json
 python -m pytest -q
 ```
 
-The duplicate example intentionally exits 1 with `--fail-on-high`. Default audit exit is 0; invalid inputs exit 2. Use `clean_train.csv` and `clean_test.csv` for a clean control. JSON output includes aggregate counts, never sampled raw rows.
+The default workflow downloads real UCI Adult data and retains its official split. No
+synthetic rows are generated. Add `--fail-on-high` to gate on high-severity findings;
+this official split contains matching feature vectors, so that option exits 1. Default
+audit exit is 0; invalid inputs exit 2. JSON includes aggregate counts, never raw rows.
 
 ```python
 from leakage_audit import audit, AuditConfig, read_csv
@@ -36,6 +47,15 @@ Thresholds are configurable through the Python API and must be finite values in 
 
 ## Authentic-data validation
 
+The default [Adult audit](docs/adult-validation-results.json) uses all 48,842 real
+records in the official split, with SHA256-pinned source files. It finds 26 matching
+heldout feature vectors and naturally occurring contradictory-label review signals.
+Independent exact-vector counts agree. Data are local and ignored; the public report
+contains aggregates and [source attribution](https://archive.ics.uci.edu/dataset/2/adult).
+No person identifiers or expert leakage labels are available, so matches do not prove
+shared people or harmful leakage. [Details and preprocessing](docs/quality-improvements.md)
+also document the smaller Wine controls.
+
 [Executed UCI Wine validation](docs/wine-validation-results.json) uses all 178 authentic chemical-analysis records and 13 features from [UCI](https://archive.ics.uci.edu/dataset/109/wine), with pinned archive/member SHA256 hashes. Citation: Aeberhard, S. & Forina, M. (1992), DOI [10.24432/C5PC7J](https://doi.org/10.24432/C5PC7J), licensed **CC BY 4.0**. Data remain ignored; only attribution and aggregate reports are tracked.
 
 ```bash
@@ -49,7 +69,12 @@ Shift threshold .1 flagged **20/20** unmodified splits; .2 flagged **7/20**; .3/
 
 ## Reproducibility and evidence
 
-[Executed benchmark](docs/benchmark-results.json) contains six seed-42 synthetic controls with independently injected defects. This is a reproducible correctness exercise, **not a real dataset performance claim**. No training, downloaded data or fabricated real-world metrics are required for a rule-based scanner. Data are generated under ignored `data/processed/`. The benchmark checks expected signals, not an exhaustive detection taxonomy. See [methodology](docs/methodology.md).
+The production workflow and default Makefile use real Adult data. Unit tests retain small
+constructed fixtures to verify known failure cases. The [earlier synthetic benchmark](docs/benchmark-results.json)
+is historical correctness evidence and is no longer the default dataset or CI benchmark.
+Optional Wine defect injections are separately labeled controlled checks. No synthetic
+or injected score is presented as real-world detection accuracy. A rule-based scanner
+has no model-training stage. See [methodology](docs/methodology.md).
 
 ## Repository layout
 

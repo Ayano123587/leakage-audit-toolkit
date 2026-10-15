@@ -1,7 +1,15 @@
 import argparse
 import json
+import hashlib
 from pathlib import Path
 from .audit import AuditConfig, audit, read_csv
+
+def source_hash(path):
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as handle:
+        for block in iter(lambda: handle.read(1024*1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
 
 def main(argv=None):
     p = argparse.ArgumentParser(description="Audit train/test CSV split integrity")
@@ -10,12 +18,23 @@ def main(argv=None):
     p.add_argument("--target", required=True)
     p.add_argument("--entity")
     p.add_argument("--time")
+    p.add_argument("--numeric-duplicate-columns", nargs='+', default=[],
+                   help="Explicit numeric features to normalize for duplicate comparison; categorical IDs stay exact")
+    p.add_argument("--check-target-quality", action='store_true',
+                   help="Opt in to missing/conflicting label diagnostics, including heldout labels; never fits proxy scores")
     p.add_argument("--embargo-seconds", type=float, default=0)
     p.add_argument("--output")
     p.add_argument("--fail-on-high", action="store_true")
     args = p.parse_args(argv)
     try:
-        result = audit(read_csv(args.train), read_csv(args.test), AuditConfig(args.target,args.entity,args.time,args.embargo_seconds))
+        before = {name: source_hash(path) for name, path in [('train', args.train), ('test', args.test)]}
+        result = audit(read_csv(args.train), read_csv(args.test), AuditConfig(args.target,args.entity,args.time,args.embargo_seconds,
+                       numeric_duplicate_columns=tuple(args.numeric_duplicate_columns), check_target_quality=args.check_target_quality))
+        after = {name: source_hash(path) for name, path in [('train', args.train), ('test', args.test)]}
+        if before != after:
+            raise ValueError('Input source changed during audit; no report emitted')
+        result['inputs'] = {name: {'filename': Path(path).name, 'sha256': before[name]}
+                            for name, path in [('train', args.train), ('test', args.test)]}
     except (ValueError, OSError) as e:
         p.error(str(e))
     content = json.dumps(result, indent=2, allow_nan=False)+"\n"
