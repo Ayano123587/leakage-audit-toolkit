@@ -8,3 +8,5 @@ test:
 	python -m pytest -q
 audit:
 	leakage-audit data/processed/duplicates_train.csv data/processed/duplicates_test.csv --target target --entity entity --time timestamp --output docs/example-report.json
+wine:
+	python -m leakage_audit.wine_validation --download

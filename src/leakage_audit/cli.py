@@ -21,8 +21,13 @@ def main(argv=None):
     content = json.dumps(result, indent=2, allow_nan=False)+"\n"
     if args.output:
         destination = Path(args.output)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(content, encoding="utf-8")
+        try:
+            if any(destination.resolve()==Path(source).resolve() or (destination.exists() and destination.samefile(source)) for source in (args.train,args.test)):
+                p.error("Output path must not overwrite either input dataset")
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(content, encoding="utf-8")
+        except OSError as error:
+            p.error(str(error))
     else:
         print(content, end="")
     return 1 if args.fail_on_high and any(f["severity"]=="high" for f in result["findings"]) else 0

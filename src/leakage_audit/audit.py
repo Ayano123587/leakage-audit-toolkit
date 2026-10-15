@@ -1,5 +1,6 @@
 """Risk signals, not a proof of leakage. Never fit on the held-out split."""
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 import csv
@@ -18,8 +19,22 @@ class AuditConfig:
     shift_threshold: float = .3
 
     def __post_init__(self):
+        names=[name for name in (self.target,self.entity,self.time) if name is not None]
+        if any(not isinstance(name,str) or not name.strip() for name in names):
+            raise ValueError("Configured column names must be nonempty strings")
+        if len(names)!=len(set(names)):
+            raise ValueError("Target, entity and time columns must be distinct")
+        values=(self.embargo_seconds,self.proxy_threshold,self.shift_threshold)
+        if any(not isinstance(v,(int,float)) for v in values):
+            raise ValueError("Embargo and thresholds must be numeric")
+        try:
+            finite=all(math.isfinite(v) for v in values)
+        except OverflowError:
+            finite=False
+        if not finite:
+            raise ValueError("Embargo and thresholds must be finite")
         if self.embargo_seconds < 0:
-            raise ValueError("embargo_seconds must be nonnegative")
+            raise ValueError("embargo_seconds must be finite and nonnegative")
         if not 0 < self.proxy_threshold <= 1 or not 0 < self.shift_threshold <= 1:
             raise ValueError("thresholds must be in (0, 1]")
 
@@ -28,10 +43,13 @@ def missing(value):
 
 def read_csv(path):
     with Path(path).open(encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        if not reader.fieldnames or len(set(reader.fieldnames)) != len(reader.fieldnames):
-            raise ValueError("CSV requires unique column names")
-        rows = list(reader)
+        reader = csv.DictReader(f,strict=True)
+        if not reader.fieldnames or any(not name.strip() for name in reader.fieldnames) or len(set(reader.fieldnames)) != len(reader.fieldnames):
+            raise ValueError("CSV requires nonempty, unique column names")
+        try:
+            rows = list(reader)
+        except csv.Error as error:
+            raise ValueError(f"Malformed CSV: {error}") from error
         if any(None in r or any(v is None for v in r.values()) for r in rows):
             raise ValueError("CSV row width differs from header")
         return rows
@@ -40,13 +58,32 @@ def number(value):
     try:
         result = float(value)
         return result if math.isfinite(result) else None
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return None
 
+def nonfinite(value):
+    """Recognized missing markers stay missing; other nonfinite numbers are invalid."""
+    if missing(value): return False
+    try:
+        return not math.isfinite(float(value))
+    except (ValueError, TypeError):
+        return False
+    except OverflowError:
+        return True
+
+def usable(value):
+    return not missing(value) and not nonfinite(value)
+
 def correlation(x, y):
-    mx, my = sum(x)/len(x), sum(y)/len(y)
-    vx, vy = sum((v-mx)**2 for v in x), sum((v-my)**2 for v in y)
-    return sum((a-mx)*(b-my) for a,b in zip(x,y))/math.sqrt(vx*vy) if vx and vy else 0.
+    # Scale finite values first to avoid overflow in means, squares and products.
+    sx,sy=max(abs(v) for v in x),max(abs(v) for v in y)
+    if not sx or not sy: return 0.
+    x,y=[v/sx for v in x],[v/sy for v in y]
+    mx,my=math.fsum(x)/len(x),math.fsum(y)/len(y)
+    vx,vy=math.fsum((v-mx)**2 for v in x),math.fsum((v-my)**2 for v in y)
+    denominator=math.sqrt(vx)*math.sqrt(vy)
+    result=math.fsum((a-mx)*(b-my) for a,b in zip(x,y))/denominator if denominator else 0.
+    return max(-1.,min(1.,result))
 
 def ks_distance(x, y):
     """Exact empirical CDF distance (effect size, not a p-value)."""
@@ -59,17 +96,31 @@ def ks_distance(x, y):
         distance = max(distance, abs(ca/len(x)-cb/len(y)))
     return distance
 
+def at_least(value, threshold):
+    """Inclusive thresholds with a tiny tolerance for empirical-fraction rounding."""
+    return value >= threshold or math.isclose(value,threshold,rel_tol=0,abs_tol=1e-12)
+
 def parse_time(value):
     parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     # Naive input is explicitly interpreted as UTC.
     return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed.astimezone(timezone.utc)
 
 def audit(train, test, config):
+    try:
+        train,test=list(train),list(test)
+    except TypeError as error:
+        raise ValueError("Splits must be iterables of row mappings") from error
     if not train or not test:
         raise ValueError("Both splits must contain rows")
+    if any(not isinstance(row,Mapping) for row in train+test):
+        raise ValueError("Every row must be a mapping of column names to scalar values")
     columns = set(train[0])
+    if any(not isinstance(c,str) or not c.strip() for c in columns):
+        raise ValueError("Column names must be nonempty strings")
     if any(set(r) != columns for r in train + test):
         raise ValueError("Splits must have identical schemas")
+    if any(not isinstance(v,(str,int,float,bool,type(None))) for row in train+test for v in row.values()):
+        raise ValueError("Tabular values must be scalar strings, numbers, booleans or None")
     required = {config.target} | {c for c in (config.entity, config.time) if c}
     if not required <= columns:
         raise ValueError(f"Missing configured columns: {sorted(required-columns)}")
@@ -80,8 +131,8 @@ def audit(train, test, config):
     if not features:
         raise ValueError("At least one non-metadata feature is required")
     signature = lambda row: tuple(row[c] for c in features)
-    signatures = {signature(r) for r in train}
-    duplicates = sum(signature(r) in signatures for r in test)
+    signatures = {signature(r) for r in train if any(usable(r[c]) for c in features)}
+    duplicates = sum(any(usable(r[c]) for c in features) and signature(r) in signatures for r in test)
     if duplicates:
         add("cross_split_duplicates", "high", test_rows=duplicates, test_fraction=duplicates/len(test), columns=features)
     if config.entity:
@@ -93,33 +144,41 @@ def audit(train, test, config):
         try:
             train_times = [parse_time(r[config.time]) for r in train]
             test_times = [parse_time(r[config.time]) for r in test]
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError, OverflowError) as e:
             raise ValueError("Every configured timestamp must be a valid ISO-8601 datetime") from e
-        cutoff = max(train_times) + timedelta(seconds=config.embargo_seconds)
+        try:
+            cutoff = max(train_times) + timedelta(seconds=config.embargo_seconds)
+        except (OverflowError,ValueError) as error:
+            raise ValueError("Temporal cutoff exceeds the supported datetime range") from error
         overlap = sum(t <= cutoff for t in test_times)
         if overlap:
             add("temporal_overlap", "high", test_rows=overlap, cutoff=cutoff.isoformat(), embargo_seconds=config.embargo_seconds)
     # Train-only associations avoid selecting features using test labels.
     for col in features:
-        pairs = [(r[col], r[config.target]) for r in train if not missing(r[col]) and not missing(r[config.target])]
+        invalid_train=sum(nonfinite(r[col]) for r in train)
+        invalid_test=sum(nonfinite(r[col]) for r in test)
+        if invalid_train or invalid_test:
+            add("nonfinite_values", "review", column=col, train_rows=invalid_train, test_rows=invalid_test)
+        pairs = [(r[col], r[config.target]) for r in train if usable(r[col]) and usable(r[config.target])]
         if len(pairs) >= 20:
             x, y = zip(*pairs)
             nx, ny = [number(v) for v in x], [number(v) for v in y]
             if all(v is not None for v in nx + ny):
                 corr = abs(correlation(nx, ny))
-                if corr >= config.proxy_threshold:
+                if at_least(corr,config.proxy_threshold):
                     add("target_proxy", "review", column=col, method="absolute_pearson", score=corr, rows=len(pairs))
             # Restrict mapping checks to repeated, low-cardinality categories.
             counts = Counter(x)
             mapping = {}
             for a,b in pairs:
                 mapping.setdefault(a, set()).add(b)
-            if 1 < len(counts) <= min(20, len(pairs)//5) and len(set(y)) > 1 and all(len(v)==1 for v in mapping.values()):
+            if 1 < len(counts) <= min(20, len(pairs)//5) and min(counts.values()) >= 5 and len(set(y)) > 1 and all(len(v)==1 for v in mapping.values()):
                 add("target_proxy", "review", column=col, method="deterministic_category_mapping", score=1., rows=len(pairs))
-        a = [r[col] for r in train if not missing(r[col])]
-        b = [r[col] for r in test if not missing(r[col])]
-        ma, mb = 1-len(a)/len(train), 1-len(b)/len(test)
-        if abs(ma-mb) >= config.shift_threshold:
+        a = [r[col] for r in train if usable(r[col])]
+        b = [r[col] for r in test if usable(r[col])]
+        ma=sum(missing(r[col]) for r in train)/len(train)
+        mb=sum(missing(r[col]) for r in test)/len(test)
+        if at_least(abs(ma-mb),config.shift_threshold):
             add("missingness_shift", "review", column=col, train_fraction=ma, test_fraction=mb)
         if not a or not b:
             continue
@@ -128,9 +187,10 @@ def audit(train, test, config):
             distance, method = ks_distance(na, nb), "empirical_ks"
         else:
             ca, cb = Counter(a), Counter(b)
-            distance = .5*sum(abs(ca[k]/len(a)-cb[k]/len(b)) for k in ca.keys() | cb.keys())
+            keys=sorted(ca.keys() | cb.keys(),key=lambda value:(type(value).__name__,repr(value)))
+            distance = min(1.,.5*math.fsum(abs(ca[k]/len(a)-cb[k]/len(b)) for k in keys))
             method = "total_variation"
-        if distance >= config.shift_threshold:
+        if at_least(distance,config.shift_threshold):
             add("distribution_shift", "review", column=col, method=method, score=distance, train_nonmissing=len(a), test_nonmissing=len(b))
     return {"schema_version": 1, "rows": {"train": len(train), "test": len(test)}, "findings": findings,
             "limitations": ["Signals require domain review; distribution shift is not proof of leakage.", "Cannot detect preprocessing fit on test data, label availability or semantic duplicates.", "Exact feature-row comparisons exclude configured target/entity/time; missing tokens are documented.", "Numeric proxy detection uses train-only linear association; nonlinear proxies may be missed."]}

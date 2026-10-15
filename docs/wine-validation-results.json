@@ -1,0 +1,587 @@
+{
+  "benchmark": "authentic UCI Wine measurements; unmodified controls versus separately labeled artificial defects",
+  "provenance": {
+    "source": "https://archive.ics.uci.edu/static/public/109/wine.zip",
+    "source_page": "https://archive.ics.uci.edu/dataset/109/wine",
+    "doi": "https://doi.org/10.24432/C5PC7J",
+    "attribution": "Aeberhard, S. & Forina, M. (1992). Wine [Dataset]. UCI Machine Learning Repository.",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "archive_sha256": "2bae62c4481220623579d4c4fb36b55652b6b75e06e49fa1981b8198362dfdab",
+    "data_sha256": "6be6b1203f3d51df0b553a70e57b8a723cd405683958204f96d23d7cd6aea659",
+    "rows": 178,
+    "features": 13
+  },
+  "thresholds": {
+    "proxy": 0.98,
+    "shift": 0.3
+  },
+  "control_protocol": "20seeded stratified75/25partitions, no defects injected. Repeated splits are dependent and not20independent datasets.",
+  "controls": [
+    {
+      "seed": 0,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 1,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 2,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 3,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 4,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 5,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 6,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 7,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 8,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 9,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 10,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 11,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 12,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 13,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 14,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 15,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 16,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 17,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 18,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    },
+    {
+      "seed": 19,
+      "rows": {
+        "train": 133,
+        "test": 45
+      },
+      "finding_count": 0,
+      "signal_kinds": [],
+      "findings": []
+    }
+  ],
+  "threshold_diagnostics": [
+    {
+      "shift_threshold": 0.1,
+      "unmodified_splits_flagged": 20,
+      "total_splits": 20,
+      "finding_counts": {
+        "distribution_shift": 207
+      }
+    },
+    {
+      "shift_threshold": 0.2,
+      "unmodified_splits_flagged": 7,
+      "total_splits": 20,
+      "finding_counts": {
+        "distribution_shift": 12
+      }
+    },
+    {
+      "shift_threshold": 0.3,
+      "unmodified_splits_flagged": 0,
+      "total_splits": 20,
+      "finding_counts": {}
+    },
+    {
+      "shift_threshold": 0.5,
+      "unmodified_splits_flagged": 0,
+      "total_splits": 20,
+      "finding_counts": {}
+    }
+  ],
+  "source_order_partition": {
+    "description": "Unmodified first133/last45rows; original file is class-ordered, so legitimate cultivar composition shift is expected. No leakage is injected and no observation-time claim is made.",
+    "findings": [
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "alcalinity_of_ash",
+          "method": "empirical_ks",
+          "score": 0.4832080200501253,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "color_intensity",
+          "method": "empirical_ks",
+          "score": 0.5695906432748538,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "flavanoids",
+          "method": "empirical_ks",
+          "score": 0.8800334168755222,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "hue",
+          "method": "empirical_ks",
+          "score": 0.783625730994152,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "malic_acid",
+          "method": "empirical_ks",
+          "score": 0.693734335839599,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "nonflavanoid_phenols",
+          "method": "empirical_ks",
+          "score": 0.5518796992481203,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "od280_od315",
+          "method": "empirical_ks",
+          "score": 0.8653299916457812,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "proanthocyanins",
+          "method": "empirical_ks",
+          "score": 0.5607351712614871,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "proline",
+          "method": "empirical_ks",
+          "score": 0.39097744360902253,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      },
+      {
+        "kind": "distribution_shift",
+        "severity": "review",
+        "evidence": {
+          "column": "total_phenols",
+          "method": "empirical_ks",
+          "score": 0.6482873851294904,
+          "train_nonmissing": 133,
+          "test_nonmissing": 45
+        }
+      }
+    ]
+  },
+  "control_signal_split_counts": {},
+  "unmodified_control_flag_fraction": 0.0,
+  "seed42_unmodified_findings": [],
+  "controlled_injections": [
+    {
+      "case": "duplicates",
+      "description": "Five heldout feature vectors replaced with training vectors; original test labels retained.",
+      "expected_signal": "cross_split_duplicates",
+      "expected_column": null,
+      "detected": true,
+      "matching_findings": [
+        {
+          "kind": "cross_split_duplicates",
+          "severity": "high",
+          "evidence": {
+            "test_rows": 5,
+            "test_fraction": 0.1111111111111111,
+            "columns": [
+              "alcalinity_of_ash",
+              "alcohol",
+              "ash",
+              "color_intensity",
+              "flavanoids",
+              "hue",
+              "magnesium",
+              "malic_acid",
+              "nonflavanoid_phenols",
+              "od280_od315",
+              "proanthocyanins",
+              "proline",
+              "total_phenols"
+            ]
+          }
+        }
+      ],
+      "all_findings": [
+        {
+          "kind": "cross_split_duplicates",
+          "severity": "high",
+          "evidence": {
+            "test_rows": 5,
+            "test_fraction": 0.1111111111111111,
+            "columns": [
+              "alcalinity_of_ash",
+              "alcohol",
+              "ash",
+              "color_intensity",
+              "flavanoids",
+              "hue",
+              "magnesium",
+              "malic_acid",
+              "nonflavanoid_phenols",
+              "od280_od315",
+              "proanthocyanins",
+              "proline",
+              "total_phenols"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "proxy",
+      "description": "Deliberate categorical encoding of labels, not a naturally observed Wine feature.",
+      "expected_signal": "target_proxy",
+      "expected_column": "label_copy",
+      "detected": true,
+      "matching_findings": [
+        {
+          "kind": "target_proxy",
+          "severity": "review",
+          "evidence": {
+            "column": "label_copy",
+            "method": "deterministic_category_mapping",
+            "score": 1.0,
+            "rows": 133
+          }
+        }
+      ],
+      "all_findings": [
+        {
+          "kind": "target_proxy",
+          "severity": "review",
+          "evidence": {
+            "column": "label_copy",
+            "method": "deterministic_category_mapping",
+            "score": 1.0,
+            "rows": 133
+          }
+        }
+      ]
+    },
+    {
+      "case": "shift",
+      "description": "Artificial +30 shift to heldout alcohol; distribution shift is not itself leakage.",
+      "expected_signal": "distribution_shift",
+      "expected_column": "alcohol",
+      "detected": true,
+      "matching_findings": [
+        {
+          "kind": "distribution_shift",
+          "severity": "review",
+          "evidence": {
+            "column": "alcohol",
+            "method": "empirical_ks",
+            "score": 1.0,
+            "train_nonmissing": 133,
+            "test_nonmissing": 45
+          }
+        }
+      ],
+      "all_findings": [
+        {
+          "kind": "distribution_shift",
+          "severity": "review",
+          "evidence": {
+            "column": "alcohol",
+            "method": "empirical_ks",
+            "score": 1.0,
+            "train_nonmissing": 133,
+            "test_nonmissing": 45
+          }
+        }
+      ]
+    },
+    {
+      "case": "missingness",
+      "description": "Artificial missingness in60% of heldout alcohol measurements.",
+      "expected_signal": "missingness_shift",
+      "expected_column": "alcohol",
+      "detected": true,
+      "matching_findings": [
+        {
+          "kind": "missingness_shift",
+          "severity": "review",
+          "evidence": {
+            "column": "alcohol",
+            "train_fraction": 0.0,
+            "test_fraction": 0.6
+          }
+        }
+      ],
+      "all_findings": [
+        {
+          "kind": "missingness_shift",
+          "severity": "review",
+          "evidence": {
+            "column": "alcohol",
+            "train_fraction": 0.0,
+            "test_fraction": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "case": "entities",
+      "description": "Manufactured disjoint row IDs with five overwritten overlaps; Wine has no natural entity field.",
+      "expected_signal": "entity_overlap",
+      "expected_column": null,
+      "detected": true,
+      "matching_findings": [
+        {
+          "kind": "entity_overlap",
+          "severity": "review",
+          "evidence": {
+            "test_rows": 5,
+            "test_fraction": 0.1111111111111111
+          }
+        }
+      ],
+      "all_findings": [
+        {
+          "kind": "entity_overlap",
+          "severity": "review",
+          "evidence": {
+            "test_rows": 5,
+            "test_fraction": 0.1111111111111111
+          }
+        }
+      ]
+    },
+    {
+      "case": "time",
+      "description": "Manufactured chronology with five past heldout timestamps; Wine provides no observation dates.",
+      "expected_signal": "temporal_overlap",
+      "expected_column": null,
+      "detected": true,
+      "matching_findings": [
+        {
+          "kind": "temporal_overlap",
+          "severity": "high",
+          "evidence": {
+            "test_rows": 5,
+            "cutoff": "2024-01-06T12:00:00+00:00",
+            "embargo_seconds": 0
+          }
+        }
+      ],
+      "all_findings": [
+        {
+          "kind": "temporal_overlap",
+          "severity": "high",
+          "evidence": {
+            "test_rows": 5,
+            "cutoff": "2024-01-06T12:00:00+00:00",
+            "embargo_seconds": 0
+          }
+        }
+      ]
+    }
+  ],
+  "injected_cases_detected": 6,
+  "injected_cases_total": 6,
+  "interpretation": [
+    "Injected defects are constructed controls, not discovered natural Wine leakage.",
+    "A review signal on an unmodified partition can arise from sample variation or target predictiveness; it is not proof of leakage.",
+    "No verified leakage-free ground truth is available, so unmodified-control flags are not an estimated real-world false positive rate.",
+    "This small dataset has no genuine group/time metadata; those injections use explicitly manufactured metadata.",
+    "Correctness on six injected cases and synthetic controls does not guarantee finding all leakage or estimate production sensitivity."
+  ]
+}
