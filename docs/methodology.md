@@ -18,6 +18,6 @@ Every case is regenerated from the same original pair so defects do not accumula
 
 The empirical KS statistic uses sorted unique numeric values and exact cumulative frequencies, so tied values are handled together. It is an effect-size threshold, without a sample-size-dependent p-value. Categorical distance is half the sum of absolute probability differences over the union of observed categories. Missingness is handled separately. High cardinality can make categorical distance uninformative.
 
-Pearson catches affine numeric proxies, including inverse relationships, but can flag valid powerful predictors and miss nonlinear proxies. Category mappings are checked only for 2�20 categories with at least five observations per category on average. Unique IDs are excluded from that check. Signals use training labels only; test labels do not drive proxy detection.
+Pearson catches affine numeric proxies, including inverse relationships, but can flag valid powerful predictors and miss nonlinear proxies. Category mappings are checked only for 2–20 categories with at least five observations per category on average. Unique IDs are excluded from that check. Signals use training labels only; test labels do not drive proxy detection.
 
 The package reads all rows into memory. Approximate matching, chunked billion-row scanning, per-entity feature availability and join lineage are future extensions, not current capabilities. Audit output omits dataset values but can contain schema names; review report access accordingly.

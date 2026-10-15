@@ -1,4 +1,4 @@
-# Split Sentinel � data leakage audit toolkit
+# Split Sentinel — data leakage audit toolkit
 
 An installable, dependency-free Python toolkit for reviewing train/test CSV integrity. It produces explainable JSON findings and supports a failing CI gate for high-severity split violations. Distribution shift and target association are review signals, not leakage verdicts.
 
