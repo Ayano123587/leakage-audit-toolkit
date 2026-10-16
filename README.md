@@ -95,3 +95,7 @@ The scanner loads CSVs in memory and compares exact rows. It does not find seman
 MIT licensed. Original implementation for Ayano123587.
 
 [Edge-case fixes](docs/edge-case-fixes.md) document tested behavior changes. Regression tests cover schema, missing/nonfinite values, time boundaries, heldout-label independence, reproducible reports and CLI behavior. A clean report never guarantees finding every leak.
+
+## Runnable notebook
+
+Open [the complete workflow](notebooks/02_real_data_workflow.ipynb) for real-data preparation, production-module execution, saved artifacts, and results plots. Expensive execution is explicit; recorded results are labeled and held-out evaluation is not automatically repeated.
