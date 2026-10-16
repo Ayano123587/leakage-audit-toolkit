@@ -13,6 +13,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+notebook = ["jupyterlab>=4,<5", "matplotlib>=3.9,<4", "numpy>=2,<3"]
 
 [project.scripts]
 leakage-audit = "leakage_audit.cli:main"

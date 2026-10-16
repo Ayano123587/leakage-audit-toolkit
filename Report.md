@@ -1,35 +1,48 @@
-# Split Sentinel: executed research and validation
+# Validation
 
-This deterministic audit package reviews dataset integrity; a trained classifier
-and classification accuracy would not measure its task. Its real-data workflow
-uses the unchanged official UCI Adult split and independently checked counts.
+Split Sentinel is a deterministic scanner. Its evaluation checks count agreement,
+source preservation and software behavior; it has no trained-model accuracy.
 
-| Executed capability | Evidence | Interpretation |
-|---|---|---|
-| Exact feature matches | 26 heldout rows among 48,842 real records | No person-identity ground truth |
-| One-feature near matches, optional | 3,032 heldout rows; independent algorithms agree | 2,953 differ only in survey weight; chance matches possible |
-| Numeric serialization controls | 5 real Wine copies with changed numeric formatting detected | Explicit controlled transformation, not natural accuracy |
-| Software verification | 84 tests; isolated installed-wheel real Adult CLI check | Mechanics and regressions, not leakage sensitivity |
+| Check | Real Adult result |
+|---|---:|
+| Training / heldout rows | 32,561 / 16,281 |
+| Heldout exact feature matches | 26 |
+| Heldout one-feature near matches | 3,032 |
+| Near matches differing only in survey weight | 2,953 |
 
-The default audit ignores heldout labels. Target-quality diagnostics and near
-matches require explicit opt-in; both remain review signals where appropriate.
-No source records, secret credentials, or fitted binaries are committed.
+The parser preserves the official split. Archive and member SHA256 checks reject
+changed source files. Exact matches are checked by an independent tuple counter;
+near matches by a separate sorted-projection algorithm. The main notebook also
+compares its inline implementation with the installed package on all real rows.
+The test suite has 84 tests for parsing, numeric behavior, label isolation,
+matching, timestamp handling and command-line behavior.
+
+The executed notebooks show distributions, match rates, differing fields and
+threshold sensitivity. Their outputs contain aggregates, not source records.
+[Exact audit](docs/adult-validation-results.json) and
+[near-match audit](docs/near-duplicate-results.json) retain machine-readable evidence.
 
 ## Reproduce
 
-```sh
+```bash
 python -m pip install -e ".[dev]"
-python evaluation_scripts/validate_real_data.py --output data/interim/evaluation/adult-audit.json
-python evaluation_scripts/validate_real_data.py --near-duplicates --output data/interim/evaluation/near-audit.json
+python evaluation_scripts/validate_real_data.py --output data/interim/adult-run.json
+python evaluation_scripts/validate_real_data.py --near-duplicates --output data/interim/near-run.json
 python -m pytest -q
 ```
 
-The second command requires the first command's processed Adult files. Reports
-refuse overwrite through these entry points. There is no training entry point
-because the audit does not learn a model. Package source remains in `src/`,
-exploration in `notebooks/`, detailed protocols/evidence in `docs/`, and ignored
-raw/derived data in `data/`. This organization adopts the user's reference
-repository's clear evaluation/reporting approach without copying its code.
+Choose fresh output paths. The second command uses the processed files from the
+first. The main notebook runs the same source preparation and audit directly.
 
-Sources and details: [real Adult audit](docs/quality-improvements.md),
-[near-match study](docs/near-duplicates.md), [protocol](docs/near-duplicate-protocol.md).
+## Limits
+
+Feature matches can occur naturally and do not establish shared identity.
+Distribution shift can be legitimate. A static CSV does not reveal whether a
+feature was available when a prediction would have been made. Adult has no
+reliable entity or observation-time field for testing longitudinal leakage.
+
+Earlier Wine checks and constructed test cases verified specific software
+mechanics. They are not estimates of real-world leakage sensitivity. Their full
+historical reports remain in Git history; the current analysis uses unchanged
+Adult data. The near-match extension was specified before scoring in commit
+5fc0b2e and excludes exact matches and configured target/entity/time fields.
