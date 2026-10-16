@@ -1,0 +1,21 @@
+{
+  "dataset": "UCI Adult",
+  "official_source": "https://archive.ics.uci.edu/dataset/2/adult",
+  "archive_sha256": "7537312dd56c2b98035880805ce99e68183a30ee468aa5329d6df0fbb3cc21bb",
+  "source_sha256": {
+    "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+    "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+  },
+  "official_split_counts": {
+    "adult.data": 32561,
+    "adult.test": 16281
+  },
+  "audited_rows": 48842,
+  "excluded_data_rows": 0,
+  "sampling": false,
+  "duplicates_retained": true,
+  "missing_values_retained": true,
+  "nondata_exclusions": "Blank lines and documented |1x3 Cross validator comment only; target terminal period normalized.",
+  "scope": "Entire official UCI Adult release; no cap, imputation, dropped rows or reshuffled split.",
+  "training": "Rule-based integrity diagnostics; no fitted income model or training-size claim."
+}

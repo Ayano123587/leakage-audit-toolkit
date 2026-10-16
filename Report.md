@@ -41,8 +41,7 @@ Distribution shift can be legitimate. A static CSV does not reveal whether a
 feature was available when a prediction would have been made. Adult has no
 reliable entity or observation-time field for testing longitudinal leakage.
 
-Earlier Wine checks and constructed test cases verified specific software
-mechanics. They are not estimates of real-world leakage sensitivity. Their full
-historical reports remain in Git history; the current analysis uses unchanged
-Adult data. The near-match extension was specified before scoring in commit
-5fc0b2e and excludes exact matches and configured target/entity/time fields.
+Constructed software tests verify specific mechanics; they do not estimate
+real-world leakage sensitivity. Near matching excludes exact matches and
+configured target, entity and time fields. The Adult analysis retains every
+published row and reports feature agreement rather than inferred identity.

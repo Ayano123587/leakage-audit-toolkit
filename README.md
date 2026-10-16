@@ -41,3 +41,5 @@ there is no implicit numeric tolerance or learned similarity.
 
 [Report](Report.md) covers validation and limitations.
 [Methodology](docs/methodology.md) defines the checks and source attribution.
+
+The Adult audit uses all 48,842 official rows, retaining duplicates and missing values. The [coverage audit](docs/dataset-coverage.json) records both official split counts and exact source hashes; there is no row subsample.
