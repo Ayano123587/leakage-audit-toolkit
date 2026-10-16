@@ -1,0 +1,45 @@
+{
+  "source": "https://archive.ics.uci.edu/dataset/2/adult",
+  "attribution": "Becker & Kohavi (1996), UCI Adult, CC BY 4.0, DOI 10.24432/C5XW20",
+  "original_archive_sha256": "7537312dd56c2b98035880805ce99e68183a30ee468aa5329d6df0fbb3cc21bb",
+  "original_source_sha256": {
+    "adult.data": "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c86603d",
+    "adult.test": "a2a9044bc167a35b2361efbabec64e89d69ce82d9790d2980119aac5fd7e9c05"
+  },
+  "processed_sha256": {
+    "train": "9653d01395c453b0db2d1a29f2e450fc7fccfdf147e71b4f573a0882692815fb",
+    "test": "b70908529805145497b2551d120ee91e0b093debec7294ffeea45202bc8dbfbd"
+  },
+  "rows": {
+    "train": 32561,
+    "test": 16281
+  },
+  "near_matches": {
+    "test_rows": 3032,
+    "test_fraction": 0.186229347091702,
+    "differing_column_counts": {
+      "age": 51,
+      "capital_gain": 4,
+      "capital_loss": 3,
+      "fnlwgt": 2953,
+      "hours_per_week": 36,
+      "marital_status": 2,
+      "native_country": 3,
+      "occupation": 40,
+      "relationship": 5,
+      "workclass": 6
+    },
+    "excluded_exact_matches": true,
+    "interpretation": "Exactly one feature differs; chance matches and legitimate repeated measurements are possible."
+  },
+  "independent_sorted_reference_agrees": true,
+  "default_findings_unchanged": true,
+  "two_audits_seconds": 20.759425799973542,
+  "total_seconds": 30.617985999997472,
+  "limits": [
+    "No identity/duplication ground truth; not precision, recall or a leakage verdict.",
+    "Differences are exact strings, no implicit numeric tolerance or semantic similarity.",
+    "Per-column counts may overlap; unique test rows counted once.",
+    "Sources retained unchanged; no synthetic rows or labels injected."
+  ]
+}

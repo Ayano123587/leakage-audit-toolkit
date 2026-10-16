@@ -2,6 +2,10 @@
 
 An installable, dependency-free Python toolkit for reviewing train/test CSV integrity. It produces explainable JSON findings and supports a failing CI gate for high-severity split violations. Distribution shift and target association are review signals, not leakage verdicts.
 
+An optional [one-feature near-match audit](docs/near-duplicates.md) now complements
+exact matching. On real Adult records it identifies 3,032 heldout near matches,
+mostly differing only in survey weight; these are review signals, not proven leakage.
+
 New opt-in checks detect numeric duplicates hidden by serialization formatting and
 missing/conflicting target labels. Exact decimal comparisons preserve large integers;
 default auditing still ignores heldout labels. [Measured controls and usage](docs/quality-improvements.md)

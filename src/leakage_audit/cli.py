@@ -22,6 +22,8 @@ def main(argv=None):
                    help="Explicit numeric features to normalize for duplicate comparison; categorical IDs stay exact")
     p.add_argument("--check-target-quality", action='store_true',
                    help="Opt in to missing/conflicting label diagnostics, including heldout labels; never fits proxy scores")
+    p.add_argument("--check-near-duplicates", action='store_true',
+                   help="Review feature vectors differing in exactly one feature (2 to 64 features); excludes exact matches")
     p.add_argument("--embargo-seconds", type=float, default=0)
     p.add_argument("--output")
     p.add_argument("--fail-on-high", action="store_true")
@@ -29,7 +31,8 @@ def main(argv=None):
     try:
         before = {name: source_hash(path) for name, path in [('train', args.train), ('test', args.test)]}
         result = audit(read_csv(args.train), read_csv(args.test), AuditConfig(args.target,args.entity,args.time,args.embargo_seconds,
-                       numeric_duplicate_columns=tuple(args.numeric_duplicate_columns), check_target_quality=args.check_target_quality))
+                       numeric_duplicate_columns=tuple(args.numeric_duplicate_columns), check_target_quality=args.check_target_quality,
+                       check_near_duplicates=args.check_near_duplicates))
         after = {name: source_hash(path) for name, path in [('train', args.train), ('test', args.test)]}
         if before != after:
             raise ValueError('Input source changed during audit; no report emitted')

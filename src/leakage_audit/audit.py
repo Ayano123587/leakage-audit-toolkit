@@ -20,6 +20,7 @@ class AuditConfig:
     shift_threshold: float = .3
     numeric_duplicate_columns: tuple[str, ...] = ()
     check_target_quality: bool = False
+    check_near_duplicates: bool = False
 
     def __post_init__(self):
         names=[name for name in (self.target,self.entity,self.time) if name is not None]
@@ -31,6 +32,8 @@ class AuditConfig:
             raise ValueError("Numeric duplicate columns must be a tuple of distinct nonempty names")
         if not isinstance(self.check_target_quality, bool):
             raise ValueError("check_target_quality must be boolean")
+        if not isinstance(self.check_near_duplicates, bool):
+            raise ValueError("check_near_duplicates must be boolean")
         values=(self.embargo_seconds,self.proxy_threshold,self.shift_threshold)
         if any(not isinstance(v,(int,float)) for v in values):
             raise ValueError("Embargo and thresholds must be numeric")
@@ -139,6 +142,8 @@ def audit(train, test, config):
         raise ValueError("At least one non-metadata feature is required")
     if not set(config.numeric_duplicate_columns) <= set(features):
         raise ValueError("Numeric duplicate columns must be non-metadata feature columns")
+    if config.check_near_duplicates and not 2 <= len(features) <= 64:
+        raise ValueError("Near-duplicate audit requires between 2 and 64 features")
     def signature(row):
         values = []
         for col in features:
@@ -165,6 +170,35 @@ def audit(train, test, config):
     if duplicates:
         add("cross_split_duplicates", "high", test_rows=duplicates, test_fraction=duplicates/len(test), columns=features,
             numeric_normalization_columns=list(config.numeric_duplicate_columns))
+    if config.check_near_duplicates:
+        # Process one projection at a time to bound memory. Keep at most two
+        # distinct omitted values: sufficient to establish an unequal witness.
+        eligible_test = [(index, signature(row)) for index, row in enumerate(test)
+                         if any(usable(row[c]) for c in features)]
+        matched_rows, by_column = set(), {}
+        for position, column in enumerate(features):
+            projections = {}
+            for values in signatures:
+                key = values[:position] + values[position+1:]
+                bucket = projections.setdefault(key, set())
+                if len(bucket) < 2:
+                    bucket.add(values[position])
+            count = 0
+            for index, values in eligible_test:
+                if values in signatures:
+                    continue
+                key = values[:position] + values[position+1:]
+                witnesses = projections.get(key, ())
+                if any(value != values[position] for value in witnesses):
+                    matched_rows.add(index)
+                    count += 1
+            if count:
+                by_column[column] = count
+        if matched_rows:
+            add('cross_split_near_duplicates', 'review', test_rows=len(matched_rows),
+                test_fraction=len(matched_rows)/len(test), differing_column_counts=by_column,
+                excluded_exact_matches=True,
+                interpretation='Exactly one feature differs; chance matches and legitimate repeated measurements are possible.')
     if config.check_target_quality:
         target_quality = {}
         for name, rows in [('train', train), ('test', test)]:
@@ -247,5 +281,6 @@ def audit(train, test, config):
             add("distribution_shift", "review", column=col, method=method, score=distance, train_nonmissing=len(a), test_nonmissing=len(b))
     return {"schema_version": 1, "rows": {"train": len(train), "test": len(test)}, "findings": findings,
             "configuration": {'numeric_duplicate_columns': list(config.numeric_duplicate_columns),
-                              'check_target_quality': config.check_target_quality},
+                              'check_target_quality': config.check_target_quality,
+                              'check_near_duplicates': config.check_near_duplicates},
             "limitations": ["Signals require domain review; distribution shift is not proof of leakage.", "Cannot detect preprocessing fit on test data, label availability or semantic duplicates.", "Exact feature-row comparisons exclude configured target/entity/time; missing tokens are documented.", "Numeric proxy detection uses train-only linear association; nonlinear proxies may be missed."]}
