@@ -45,7 +45,7 @@ Executed checks: **84 tests pass**. A dependency-free wheel installed into an
 isolated directory and invoked with `python -S -m leakage_audit.cli` on all real
 Adult records reproduces exactly 3,032 near matches. Installed-wheel SHA256:
 `49f7366b478fe0dbb034e4c7cdc96741601f231f4d438027ea233c79e4d89095`.
-The two audits plus independent reference took30.62seconds on this shared machine;
+The two audits plus independent reference took 30.62 seconds on this shared machine;
 this is an observed runtime, not a performance guarantee. No default thresholds
 or default findings were changed. The broad match count reinforces the choice to
 keep this option disabled unless an analyst explicitly wants near-match review.
